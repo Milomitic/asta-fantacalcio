@@ -1,4 +1,4 @@
-// server.js — per-player timers + feedback + start check + logging base
+// server.js — blocchi rilanci (asta non aperta / terminata), feedback & timers
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -36,7 +36,7 @@ function appendJsonl(file, obj) {
 	fs.appendFileSync(file, JSON.stringify(obj) + "\n");
 }
 
-// Load files
+// Load
 const usersArray = readJson(USERS_FILE, []);
 const playersArray = readJson(PLAYERS_FILE, []);
 const USERS_BY_IP = {};
@@ -54,12 +54,6 @@ const INITIAL_PLAYERS = playersArray.map((p) => ({
 	team: p.team || "",
 	base: Number(p.base || 1),
 }));
-
-console.log("[DEBUG] users.json caricato:", USERS_BY_IP);
-console.log(
-	"[DEBUG] players.json caricato:",
-	INITIAL_PLAYERS.map((p) => p.id + ":" + p.name)
-);
 
 // State
 const defaultState = {
@@ -79,21 +73,18 @@ for (const p of INITIAL_PLAYERS) {
 		history: [],
 		endAt: null,
 		closed: false,
-		// override per-player (opzionali)
-		extendOnBidSeconds: null,
+		extendOnBidSeconds: null, // override per-card opzionale
 	};
 }
 const state = readJson(STATE_FILE, defaultState);
-console.log("[DEBUG] Stato iniziale utenti:", Object.keys(state.users));
-console.log("[DEBUG] Stato iniziale giocatori:", Object.keys(state.players));
 
-// App + Socket
 const app = express();
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, { cors: { origin: "*" } });
 
+// Helpers
 function extractIp(socket) {
 	const url = new URL(socket.handshake.url, "http://x");
 	const forcedIp = url.searchParams.get("ip");
@@ -104,7 +95,6 @@ function extractIp(socket) {
 		socket.handshake.address || socket.request.connection?.remoteAddress;
 	return (raw || "0.0.0.0").replace("::ffff:", "");
 }
-
 function committedCreditsFor(ip) {
 	let sum = 0;
 	for (const p of Object.values(state.players)) {
@@ -123,7 +113,6 @@ function effectiveExtendSeconds(player) {
 		return Number(player.extendOnBidSeconds) || 0;
 	return Number(state.auctionSettings.extendOnBidSeconds) || 0;
 }
-
 function broadcastState() {
 	io.emit("state", {
 		now: Date.now(),
@@ -146,7 +135,7 @@ function saveState() {
 	writeJson(STATE_FILE, state);
 }
 
-// Logging helpers
+// Logging file per giocatore
 function slugify(s) {
 	return String(s)
 		.toLowerCase()
@@ -217,7 +206,6 @@ function logBidToFiles(player, entry) {
 io.on("connection", (socket) => {
 	const ip = extractIp(socket);
 	const user = state.users[ip];
-	console.log("[DEBUG] Connessione", { ip, user });
 
 	// initial payload
 	socket.emit("hello", {
@@ -230,7 +218,7 @@ io.on("connection", (socket) => {
 	});
 	broadcastState();
 
-	// BID
+	// BID — blocchi aggiuntivi richiesti
 	socket.on("bid", ({ playerId, amount }) => {
 		const bidderIp = extractIp(socket);
 		const bidder = state.users[bidderIp];
@@ -247,8 +235,17 @@ io.on("connection", (socket) => {
 		if (!p) return socket.emit("error-msg", "Giocatore inesistente.");
 		if (!Number.isFinite(value) || value <= 0)
 			return socket.emit("error-msg", "Importo non valido.");
-		if (startAt && now < startAt)
+
+		// 🔒 ASTA ANCORA CHIUSA: serve un startAt globale impostato e non nel futuro
+		if (!startAt)
+			return socket.emit(
+				"error-msg",
+				"Aste ancora chiuse: imposta l’orario di inizio."
+			);
+		if (now < startAt)
 			return socket.emit("error-msg", "Asta non ancora iniziata.");
+
+		// 🔒 ASTA CHIUSA (per-card o globale)
 		if (p.closed || (p.endAt && now >= p.endAt)) {
 			p.closed = true;
 			return socket.emit(
@@ -256,6 +253,7 @@ io.on("connection", (socket) => {
 				"Asta per questo giocatore terminata."
 			);
 		}
+
 		if (p.currentBidderIp === bidderIp)
 			return socket.emit("error-msg", "Sei già l’ultimo offerente.");
 		if (value <= p.currentBid)
