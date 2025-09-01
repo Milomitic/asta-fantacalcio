@@ -1,0 +1,15 @@
+{
+  "name": "asta-fantacalcio-live",
+  "version": "1.0.0",
+  "description": "Asta fantacalcio live realtime con Socket.IO, persistenza locale e logging CSV/JSONL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

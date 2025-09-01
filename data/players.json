@@ -1,0 +1,62 @@
+[
+  {
+    "id": "p1",
+    "name": "Portiere",
+    "team": "Team A",
+    "base": 1
+  },
+  {
+    "id": "p2",
+    "name": "Difensore 1",
+    "team": "Team B",
+    "base": 1
+  },
+  {
+    "id": "p3",
+    "name": "Difensore 2",
+    "team": "Team B",
+    "base": 1
+  },
+  {
+    "id": "p4",
+    "name": "Centrocampista 1",
+    "team": "Team C",
+    "base": 1
+  },
+  {
+    "id": "p5",
+    "name": "Centrocampista 2",
+    "team": "Team C",
+    "base": 1
+  },
+  {
+    "id": "p6",
+    "name": "Attaccante 1",
+    "team": "Team D",
+    "base": 1
+  },
+  {
+    "id": "p7",
+    "name": "Attaccante 2",
+    "team": "Team D",
+    "base": 1
+  },
+  {
+    "id": "p8",
+    "name": "Jolly 1",
+    "team": "Team E",
+    "base": 1
+  },
+  {
+    "id": "p9",
+    "name": "Jolly 2",
+    "team": "Team E",
+    "base": 1
+  },
+  {
+    "id": "p10",
+    "name": "Jolly 3",
+    "team": "Team F",
+    "base": 1
+  }
+]
