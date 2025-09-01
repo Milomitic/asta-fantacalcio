@@ -1,14 +1,14 @@
 [
-  {
-    "ip": "10.0.0.10",
-    "name": "Admin",
-    "credits": 9999,
-    "role": "admin"
-  },
-  {
-    "ip": "10.0.0.11",
-    "name": "Luca",
-    "credits": 500,
-    "role": "user"
-  }
+	{
+		"ip": "151.72.119.175",
+		"name": "TORO",
+		"credits": 30,
+		"role": "admin"
+	},
+	{
+		"ip": "10.0.0.11",
+		"name": "Luca",
+		"credits": 500,
+		"role": "user"
+	}
 ]
